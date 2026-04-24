@@ -1,0 +1,2792 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KlamEX 8.5 - Advanced OS Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes bootProgress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes slideUpIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes windowSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
+            50% { text-shadow: 0 0 40px #00ff00, 0 0 80px #00ff00; }
+        }
+
+        @keyframes matrixRain {
+            0% { transform: translateY(-100%); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        @keyframes typewriter {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        /* ===== BOOT SCREEN ===== */
+        .boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #000000 0%, #1a0033 50%, #000000 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9999;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        .boot-matrix {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            opacity: 0.1;
+        }
+
+        .matrix-char {
+            position: absolute;
+            color: #00ff00;
+            font-size: 20px;
+            animation: matrixRain linear forwards;
+        }
+
+        .boot-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .boot-logo {
+            font-size: 72px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px #00ff00;
+            animation: glow 2s infinite, pulse 1s infinite;
+            letter-spacing: 3px;
+        }
+
+        .boot-subtitle {
+            font-size: 16px;
+            color: #00ff99;
+            margin-bottom: 20px;
+            animation: typewriter 3s steps(50) 1;
+        }
+
+        .boot-text {
+            font-size: 13px;
+            margin-bottom: 15px;
+            text-align: center;
+            opacity: 0.8;
+            color: #00ff00;
+        }
+
+        .boot-progress {
+            width: 400px;
+            height: 15px;
+            background: #1a1a1a;
+            border: 2px solid #00ff00;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 10px #00ff00;
+            border-radius: 3px;
+        }
+
+        .boot-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #00aa00, #00ff00);
+            width: 0%;
+            animation: bootProgress 2s ease-in-out forwards;
+            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .boot-text-scroll {
+            font-size: 11px;
+            width: 500px;
+            height: 120px;
+            background: #000;
+            border: 2px solid #00ff00;
+            padding: 10px;
+            overflow-y: auto;
+            margin-top: 20px;
+            color: #00ff00;
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.2);
+            line-height: 1.4;
+        }
+
+        .boot-text-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .boot-text-scroll::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        .boot-text-scroll::-webkit-scrollbar-thumb {
+            background: #00ff00;
+        }
+
+        /* ===== LOGIN SCREEN ===== */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+            overflow: hidden;
+        }
+
+        .login-bg-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            border-radius: 50%;
+        }
+
+        .login-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 60px 50px;
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37), 0 0 50px rgba(102, 126, 234, 0.3);
+            animation: slideIn 0.7s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+
+        .login-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: white;
+            border: 4px solid white;
+            animation: bounce 2s infinite;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-username {
+            color: white;
+            font-size: 22px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .login-hostname {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .login-input {
+            width: 320px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-input:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            transform: scale(1.05);
+            background: white;
+        }
+
+        .login-button {
+            width: 320px;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .login-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-button:active {
+            transform: scale(0.98);
+        }
+
+        .login-footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* ===== DESKTOP ===== */
+        .desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #001a4d 0%, #001133 50%, #000022 100%);
+            background-attachment: fixed;
+            display: none;
+            z-index: 1;
+        }
+
+        .desktop::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="transparent"/><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            pointer-events: none;
+        }
+
+        .desktop-icons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 30px;
+            z-index: 10;
+        }
+
+        .desktop-icon {
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(102, 126, 234, 0.15);
+            transform: scale(1.1);
+        }
+
+        .desktop-icon-image {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .desktop-icon:hover .desktop-icon-image {
+            border-color: white;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+            transform: scale(1.05);
+        }
+
+        .desktop-icon-label {
+            font-size: 12px;
+            color: white;
+            text-align: center;
+            word-break: break-word;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        /* ===== CONTEXT MENU ===== */
+        .context-menu {
+            position: fixed;
+            background: rgba(240, 240, 240, 0.98);
+            border: 1px solid #999;
+            border-radius: 5px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            display: none;
+            min-width: 180px;
+            animation: popIn 0.2s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .context-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .context-menu-item:hover {
+            background: #667eea;
+            color: white;
+            padding-left: 20px;
+        }
+
+        /* ===== TASKBAR ===== */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+            border-top: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 5000;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .taskbar-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: all 0.3s;
+            border: none;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .taskbar-start:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .taskbar-separator {
+            width: 1px;
+            height: 30px;
+            background: #444;
+            margin: 0 8px;
+        }
+
+        .taskbar-apps {
+            display: flex;
+            gap: 5px;
+            flex: 1;
+            overflow-x: auto;
+        }
+
+        .taskbar-app {
+            background: #3a3a3a;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .taskbar-app:hover {
+            background: #4a4a4a;
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .taskbar-app.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #764ba2;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .taskbar-clock {
+            margin-left: auto;
+            color: #00ff00;
+            font-size: 13px;
+            padding: 0 15px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .taskbar-systray {
+            display: flex;
+            gap: 12px;
+            margin-left: 10px;
+            align-items: center;
+        }
+
+        .systray-icon {
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .systray-icon:hover {
+            color: #667eea;
+            transform: scale(1.3);
+        }
+
+        /* ===== START MENU ===== */
+        .start-menu {
+            position: fixed;
+            bottom: 50px;
+            left: 0;
+            width: 380px;
+            background: rgba(240, 240, 240, 0.98);
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.4);
+            z-index: 4999;
+            display: none;
+            flex-direction: column;
+            max-height: 650px;
+            animation: slideUpIn 0.3s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        .start-menu-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px;
+            font-weight: bold;
+            font-size: 17px;
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .start-menu-search {
+            padding: 12px;
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .start-menu-search input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .start-menu-search input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #667eea;
+            border-color: #667eea;
+        }
+
+        .start-menu-apps {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .start-menu-app {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .start-menu-app:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.2), transparent);
+            padding-left: 22px;
+        }
+
+        .start-menu-app-icon {
+            font-size: 18px;
+            width: 24px;
+        }
+
+        /* ===== WINDOW SYSTEM ===== */
+        .window {
+            position: fixed;
+            background: #f0f0f0;
+            border: 2px solid #999;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: none;
+            flex-direction: column;
+            min-width: 450px;
+            min-height: 320px;
+            z-index: 2000;
+            animation: windowSlideIn 0.3s ease-out;
+        }
+
+        .window.active {
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+            border-color: #667eea;
+        }
+
+        .window-header {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .window-header-title {
+            flex: 1;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .window-header-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .window-btn {
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .window-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .window-btn.close:hover {
+            background: #e74c3c;
+        }
+
+        .window-content {
+            flex: 1;
+            padding: 12px;
+            overflow: auto;
+            background: white;
+        }
+
+        /* ===== SCROLLBAR STYLING ===== */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        /* ===== CMD APPLICATION ===== */
+        .cmd-terminal {
+            background: #000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            padding: 12px;
+            height: 100%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .cmd-line {
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        .cmd-input-line {
+            display: flex;
+            gap: 5px;
+        }
+
+        .cmd-prompt {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .cmd-input {
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            outline: none;
+            flex: 1;
+        }
+
+        .cmd-line.error {
+            color: #ff6666;
+        }
+
+        .cmd-line.success {
+            color: #66ff66;
+        }
+
+        .cmd-line.warning {
+            color: #ffff66;
+        }
+
+        /* ===== NOTEPAD APPLICATION ===== */
+        .notepad-textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: none;
+            outline: none;
+        }
+
+        .notepad-menu {
+            background: #e8e8e8;
+            padding: 8px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .notepad-menu button {
+            padding: 6px 12px;
+            background: #d0d0d0;
+            border: 1px solid #999;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .notepad-menu button:hover {
+            background: #e8e8e8;
+            transform: scale(1.05);
+        }
+
+        /* ===== PAINT APPLICATION ===== */
+        .paint-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 8px;
+        }
+
+        .paint-toolbar {
+            display: flex;
+            gap: 5px;
+            padding: 8px;
+            background: #e8e8e8;
+            border-bottom: 1px solid #ccc;
+            flex-wrap: wrap;
+        }
+
+        .paint-tool {
+            padding: 7px 13px;
+            background: #d0d0d0;
+            border: 1px solid #999;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .paint-tool:hover {
+            background: #e8e8e8;
+            transform: scale(1.05);
+        }
+
+        .paint-tool.active {
+            background: #667eea;
+            color: white;
+            border-color: #764ba2;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .paint-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 8px;
+            background: #e8e8e8;
+            border-bottom: 1px solid #ccc;
+            flex-wrap: wrap;
+        }
+
+        .paint-color-input {
+            width: 45px;
+            height: 35px;
+            cursor: pointer;
+            border: 2px solid #999;
+            border-radius: 4px;
+        }
+
+        .paint-size-input {
+            width: 65px;
+            padding: 6px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .paint-canvas {
+            flex: 1;
+            background: white;
+            cursor: crosshair;
+            border: 1px solid #ccc;
+            margin: 5px;
+        }
+
+        /* ===== CALCULATOR APPLICATION ===== */
+        .calculator-display {
+            background: #000;
+            color: #00ff00;
+            padding: 18px;
+            font-size: 28px;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            border-bottom: 2px solid #ccc;
+            word-break: break-all;
+            min-height: 50px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+        }
+
+        .calculator-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            padding: 12px;
+        }
+
+        .calc-btn {
+            padding: 18px;
+            font-size: 16px;
+            border: 1px solid #999;
+            background: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .calc-btn:hover {
+            background: #e0e0e0;
+            transform: scale(1.05);
+        }
+
+        .calc-btn:active {
+            transform: scale(0.95);
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .calc-btn.operator {
+            background: #667eea;
+            color: white;
+        }
+
+        .calc-btn.operator:hover {
+            background: #764ba2;
+        }
+
+        .calc-btn.equals {
+            background: #27ae60;
+            color: white;
+            grid-column: span 2;
+        }
+
+        .calc-btn.equals:hover {
+            background: #229954;
+        }
+
+        .calc-btn.clear {
+            background: #e74c3c;
+            color: white;
+            grid-column: span 2;
+        }
+
+        .calc-btn.clear:hover {
+            background: #c0392b;
+        }
+
+        /* ===== FILE EXPLORER ===== */
+        .file-explorer {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .file-explorer-toolbar {
+            display: flex;
+            gap: 5px;
+            padding: 8px;
+            background: #e8e8e8;
+            border-bottom: 1px solid #ccc;
+            flex-wrap: wrap;
+        }
+
+        .explorer-btn {
+            padding: 7px 13px;
+            background: #d0d0d0;
+            border: 1px solid #999;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .explorer-btn:hover {
+            background: #e8e8e8;
+            transform: scale(1.05);
+        }
+
+        .file-path {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #ccc;
+            font-size: 12px;
+            margin-bottom: 0;
+        }
+
+        .file-explorer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 12px;
+            padding: 12px;
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .file-item:hover {
+            background: rgba(102, 126, 234, 0.15);
+            transform: scale(1.08);
+        }
+
+        .file-item-icon {
+            font-size: 40px;
+            margin-bottom: 6px;
+        }
+
+        .file-item-name {
+            font-size: 11px;
+            text-align: center;
+            word-break: break-word;
+            width: 75px;
+        }
+
+        /* ===== GAME CONTAINER ===== */
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .game-info {
+            display: flex;
+            gap: 40px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .game-canvas {
+            background: #000;
+            border: 3px solid #667eea;
+            cursor: none;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .game-controls {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- BOOT SCREEN -->
+    <div class="boot-screen" id="bootScreen">
+        <div class="boot-matrix" id="bootMatrix"></div>
+        <div class="boot-container">
+            <div class="boot-logo">◄ KlamEX 8.5 ►</div>
+            <div class="boot-subtitle">Advanced Operating System Simulator</div>
+            <div class="boot-text">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+            <div class="boot-progress">
+                <div class="boot-progress-bar"></div>
+            </div>
+            <div class="boot-text">Initializing System Cores...</div>
+            <div class="boot-text-scroll" id="bootTextScroll">
+                [BOOT] BIOS v3.2.1 - Quantum Edition - 24/04/2026
+                [BOOT] Checking CMOS Battery... OK
+                [BOOT] RAM Check: 16384 MB... COMPLETE
+                [BOOT] CPU Detection: Intel Core i9-14900K... OK
+                [BOOT] GPU Detection: NVIDIA RTX 4090... OK
+                [BOOT] HDD Check: 2TB NVMe SSD... COMPLETE
+                [BOOT] Loading Kernel v8.5.26100...
+                [BOOT] Mounting filesystems... OK
+                [BOOT] Starting System Services...
+                [BOOT] Loading Device Drivers...
+                [BOOT] Initializing Graphics Mode (1920x1080)...
+                [BOOT] Starting Network Services...
+                [BOOT] Loading System Sounds...
+                [BOOT] Finalizing Boot Sequence...
+                [BOOT] System Ready!
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-bg-shapes">
+            <div class="shape" style="width: 300px; height: 300px; background: rgba(102, 126, 234, 0.3); top: -50px; left: -50px;"></div>
+            <div class="shape" style="width: 200px; height: 200px; background: rgba(118, 75, 162, 0.3); bottom: -30px; right: -30px;"></div>
+            <div class="shape" style="width: 250px; height: 250px; background: rgba(102, 126, 234, 0.2); top: 50%; right: 5%; transform: rotate(45deg);"></div>
+        </div>
+        <div class="login-container">
+            <div class="login-avatar">👤</div>
+            <div class="login-username">Ozan530</div>
+            <div class="login-hostname">DESKTOP-KX85</div>
+            <input type="password" class="login-input" id="passwordInput" placeholder="Enter password" onkeypress="if(event.key==='Enter') loginUser()">
+            <button class="login-button" onclick="loginUser()">Sign In</button>
+            <div class="login-footer">Press Ctrl+Alt+Del to change user</div>
+        </div>
+    </div>
+
+    <!-- DESKTOP -->
+    <div class="desktop" id="desktop">
+        <div class="desktop-icons" id="desktopIcons"></div>
+    </div>
+
+    <!-- CONTEXT MENU -->
+    <div class="context-menu" id="contextMenu"></div>
+
+    <!-- TASKBAR -->
+    <div class="taskbar">
+        <button class="taskbar-start" onclick="toggleStartMenu()">⊞ START</button>
+        <div class="taskbar-separator"></div>
+        <div class="taskbar-apps" id="taskbarApps"></div>
+        <div class="taskbar-clock" id="taskbarClock">00:00:00</div>
+        <div class="taskbar-systray">
+            <div class="systray-icon" title="Volume">🔊</div>
+            <div class="systray-icon" title="WiFi">📡</div>
+            <div class="systray-icon" title="Power">🔋</div>
+            <div class="systray-icon" title="Settings">⚙️</div>
+        </div>
+    </div>
+
+    <!-- START MENU -->
+    <div class="start-menu" id="startMenu">
+        <div class="start-menu-header">🎮 All Applications</div>
+        <div class="start-menu-search">
+            <input type="text" placeholder="🔍 Search programs..." id="appSearch">
+        </div>
+        <div class="start-menu-apps" id="startMenuApps"></div>
+    </div>
+
+    <!-- WINDOWS CONTAINER -->
+    <div id="windowsContainer"></div>
+
+    <script>
+        // ===== MATRIX EFFECT FOR BOOT SCREEN =====
+        function createMatrixEffect() {
+            const bootMatrix = document.getElementById('bootMatrix');
+            const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            
+            for (let i = 0; i < 20; i++) {
+                const char = document.createElement('div');
+                char.className = 'matrix-char';
+                char.textContent = chars[Math.floor(Math.random() * chars.length)];
+                char.style.left = Math.random() * 100 + '%';
+                char.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                char.style.animationDelay = Math.random() * 2 + 's';
+                bootMatrix.appendChild(char);
+            }
+        }
+
+        // ===== GLOBAL STATE =====
+        const state = {
+            isBooted: false,
+            isLoggedIn: false,
+            windows: [],
+            activeWindow: null,
+            startMenuOpen: false,
+            nextZIndex: 2000,
+            calcValue: '0',
+            calcOperation: null,
+            calcPreviousValue: null
+        };
+
+        const applications = [
+            { id: 'cmd', name: 'Command Prompt', icon: '⌘', type: 'cmd' },
+            { id: 'notepad', name: 'Notepad', icon: '📝', type: 'notepad' },
+            { id: 'paint', name: 'Paint', icon: '🎨', type: 'paint' },
+            { id: 'calculator', name: 'Calculator', icon: '🧮', type: 'calculator' },
+            { id: 'file-explorer', name: 'File Explorer', icon: '📁', type: 'fileExplorer' },
+            { id: 'snake', name: 'Snake Game', icon: '🐍', type: 'snake' },
+            { id: 'tetris', name: 'Tetris', icon: '🧱', type: 'tetris' },
+            { id: 'flappy', name: 'Flappy Bird', icon: '🐦', type: 'flappy' },
+            { id: 'pong', name: 'Pong Game', icon: '🏓', type: 'pong' },
+            { id: 'breakout', name: 'Breakout', icon: '⚡', type: 'breakout' },
+            { id: 'maze', name: 'Maze Runner', icon: '🌀', type: 'maze' },
+            { id: 'memory', name: 'Memory Game', icon: '🧠', type: 'memory' },
+            { id: 'browser', name: 'Web Browser', icon: '🌐', type: 'browser' },
+            { id: 'image-viewer', name: 'Image Viewer', icon: '🖼️', type: 'imageViewer' },
+            { id: 'task-manager', name: 'Task Manager', icon: '⚡', type: 'taskManager' },
+            { id: 'system-info', name: 'System Info', icon: 'ℹ️', type: 'systemInfo' },
+            { id: 'code-editor', name: 'Code Editor', icon: '💻', type: 'codeEditor' },
+            { id: 'media-player', name: 'Media Player', icon: '🎵', type: 'mediaPlayer' }
+        ];
+
+        const desktopIcons = [
+            { id: 'my-computer', name: 'My Computer', icon: '💻', type: 'fileExplorer' },
+            { id: 'documents', name: 'Documents', icon: '📄', type: 'fileExplorer' },
+            { id: 'games', name: 'Games', icon: '🎮', type: 'games' }
+        ];
+
+        // ===== BOOT SEQUENCE =====
+        function startBoot() {
+            createMatrixEffect();
+            setTimeout(completeBoot, 2000);
+        }
+
+        function completeBoot() {
+            const bootScreen = document.getElementById('bootScreen');
+            state.isBooted = true;
+            bootScreen.style.display = 'none';
+            showLoginScreen();
+        }
+
+        function showLoginScreen() {
+            const loginScreen = document.getElementById('loginScreen');
+            loginScreen.style.display = 'flex';
+            document.getElementById('passwordInput').focus();
+        }
+
+        function loginUser() {
+            const password = document.getElementById('passwordInput').value;
+            if (password.length > 0) {
+                const loginScreen = document.getElementById('loginScreen');
+                const desktop = document.getElementById('desktop');
+                
+                state.isLoggedIn = true;
+                loginScreen.style.display = 'none';
+                desktop.style.display = 'block';
+                
+                initializeDesktop();
+                startClock();
+                showNotification('Welcome to KlamEX 8.5!');
+            }
+        }
+
+        // ===== NOTIFICATION SYSTEM =====
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 70px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                z-index: 9999;
+                animation: slideIn 0.3s ease-out;
+                font-size: 13px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // ===== DESKTOP INITIALIZATION =====
+        function initializeDesktop() {
+            populateDesktopIcons();
+            populateStartMenu();
+        }
+
+        function populateDesktopIcons() {
+            const desktopIconsContainer = document.getElementById('desktopIcons');
+            desktopIconsContainer.innerHTML = '';
+
+            desktopIcons.forEach(icon => {
+                const iconEl = document.createElement('div');
+                iconEl.className = 'desktop-icon';
+                iconEl.innerHTML = `
+                    <div class="desktop-icon-image">${icon.icon}</div>
+                    <div class="desktop-icon-label">${icon.name}</div>
+                `;
+                iconEl.ondblclick = () => openApplication(icon.id, icon.type);
+                desktopIconsContainer.appendChild(iconEl);
+            });
+        }
+
+        function populateStartMenu() {
+            const startMenuApps = document.getElementById('startMenuApps');
+            startMenuApps.innerHTML = '';
+
+            applications.forEach(app => {
+                const appEl = document.createElement('div');
+                appEl.className = 'start-menu-app';
+                appEl.innerHTML = `
+                    <div class="start-menu-app-icon">${app.icon}</div>
+                    <div>${app.name}</div>
+                `;
+                appEl.onclick = () => {
+                    openApplication(app.id, app.type);
+                    toggleStartMenu();
+                };
+                startMenuApps.appendChild(appEl);
+            });
+
+            const searchInput = document.getElementById('appSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase();
+                    const appElements = startMenuApps.querySelectorAll('.start-menu-app');
+                    appElements.forEach(app => {
+                        const text = app.textContent.toLowerCase();
+                        app.style.display = text.includes(query) ? '' : 'none';
+                    });
+                });
+            }
+        }
+
+        // ===== WINDOW MANAGEMENT =====
+        function openApplication(id, type) {
+            const windowEl = document.createElement('div');
+            const windowId = `window-${Date.now()}-${Math.random()}`;
+            windowEl.id = windowId;
+            windowEl.className = 'window active';
+
+            let title = '';
+            let content = '';
+
+            switch(type) {
+                case 'cmd':
+                    title = 'Command Prompt';
+                    content = createCMDContent();
+                    break;
+                case 'notepad':
+                    title = 'Notepad';
+                    content = createNotepadContent();
+                    break;
+                case 'paint':
+                    title = 'Paint';
+                    content = createPaintContent();
+                    break;
+                case 'calculator':
+                    title = 'Calculator';
+                    content = createCalculatorContent();
+                    break;
+                case 'fileExplorer':
+                    title = 'File Explorer';
+                    content = createFileExplorerContent();
+                    break;
+                case 'snake':
+                    title = 'Snake Game';
+                    content = createSnakeContent();
+                    break;
+                case 'tetris':
+                    title = 'Tetris';
+                    content = createTetrisContent();
+                    break;
+                case 'flappy':
+                    title = 'Flappy Bird';
+                    content = createFlappyContent();
+                    break;
+                case 'pong':
+                    title = 'Pong';
+                    content = createPongContent();
+                    break;
+                case 'breakout':
+                    title = 'Breakout';
+                    content = createBreakoutContent();
+                    break;
+                case 'maze':
+                    title = 'Maze Runner';
+                    content = createMazeContent();
+                    break;
+                case 'memory':
+                    title = 'Memory Game';
+                    content = createMemoryContent();
+                    break;
+                case 'browser':
+                    title = 'Web Browser';
+                    content = createBrowserContent();
+                    break;
+                case 'imageViewer':
+                    title = 'Image Viewer';
+                    content = createImageViewerContent();
+                    break;
+                case 'taskManager':
+                    title = 'Task Manager';
+                    content = createTaskManagerContent();
+                    break;
+                case 'systemInfo':
+                    title = 'System Information';
+                    content = createSystemInfoContent();
+                    break;
+                case 'codeEditor':
+                    title = 'Code Editor';
+                    content = createCodeEditorContent();
+                    break;
+                case 'mediaPlayer':
+                    title = 'Media Player';
+                    content = createMediaPlayerContent();
+                    break;
+            }
+
+            const randomX = Math.random() * (window.innerWidth - 450);
+            const randomY = Math.random() * (window.innerHeight - 320 - 50);
+
+            windowEl.innerHTML = `
+                <div class="window-header">
+                    <div class="window-header-title">${title}</div>
+                    <div class="window-header-buttons">
+                        <button class="window-btn" onclick="minimizeWindow('${windowId}')">−</button>
+                        <button class="window-btn" onclick="maximizeWindow('${windowId}')">□</button>
+                        <button class="window-btn close" onclick="closeWindow('${windowId}')">✕</button>
+                    </div>
+                </div>
+                <div class="window-content">${content}</div>
+            `;
+
+            windowEl.style.left = randomX + 'px';
+            windowEl.style.top = randomY + 'px';
+            windowEl.style.zIndex = state.nextZIndex++;
+            windowEl.style.display = 'flex';
+
+            makeWindowDraggable(windowEl);
+
+            document.getElementById('windowsContainer').appendChild(windowEl);
+
+            state.windows.push({
+                id: id,
+                windowId: windowId,
+                type: type,
+                element: windowEl,
+                minimized: false
+            });
+
+            addToTaskbar(id, title, windowId);
+
+            windowEl.onclick = () => focusWindow(windowId);
+
+            setTimeout(() => {
+                if (type === 'cmd') {
+                    initializeCMD(windowId);
+                } else if (type === 'paint') {
+                    initializePaint(windowId);
+                } else if (type === 'snake') {
+                    initializeSnake(windowId);
+                } else if (type === 'tetris') {
+                    initializeTetris(windowId);
+                } else if (type === 'flappy') {
+                    initializeFlappy(windowId);
+                } else if (type === 'pong') {
+                    initializePong(windowId);
+                } else if (type === 'breakout') {
+                    initializeBreakout(windowId);
+                } else if (type === 'maze') {
+                    initializeMaze(windowId);
+                } else if (type === 'memory') {
+                    initializeMemory(windowId);
+                }
+            }, 100);
+        }
+
+        function makeWindowDraggable(windowEl) {
+            let isDragging = false;
+            let currentX = 0;
+            let currentY = 0;
+            let initialX = 0;
+            let initialY = 0;
+
+            const header = windowEl.querySelector('.window-header');
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                initialX = e.clientX - currentX;
+                initialY = e.clientY - currentY;
+                focusWindow(windowEl.id);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+
+                    windowEl.style.left = Math.max(0, currentX) + 'px';
+                    windowEl.style.top = Math.max(0, currentY) + 'px';
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        }
+
+        function focusWindow(windowId) {
+            state.windows.forEach(w => {
+                w.element.classList.remove('active');
+            });
+
+            const window = state.windows.find(w => w.windowId === windowId);
+            if (window) {
+                window.element.classList.add('active');
+                window.element.style.zIndex = state.nextZIndex++;
+            }
+
+            state.activeWindow = windowId;
+        }
+
+        function closeWindow(windowId) {
+            const windowIndex = state.windows.findIndex(w => w.windowId === windowId);
+            if (windowIndex > -1) {
+                const window = state.windows[windowIndex];
+                window.element.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => {
+                    window.element.remove();
+                    state.windows.splice(windowIndex, 1);
+                    removeFromTaskbar(window.id, windowId);
+                }, 300);
+            }
+        }
+
+        function minimizeWindow(windowId) {
+            const window = state.windows.find(w => w.windowId === windowId);
+            if (window) {
+                window.minimized = true;
+                window.element.style.display = 'none';
+            }
+        }
+
+        function maximizeWindow(windowId) {
+            const window = state.windows.find(w => w.windowId === windowId);
+            if (window) {
+                window.element.style.left = '0px';
+                window.element.style.top = '0px';
+                window.element.style.width = '100%';
+                window.element.style.height = (window.innerHeight - 50) + 'px';
+            }
+        }
+
+        // ===== TASKBAR MANAGEMENT =====
+        function addToTaskbar(appId, appName, windowId) {
+            const taskbarApps = document.getElementById('taskbarApps');
+            const taskbarApp = document.createElement('div');
+            taskbarApp.className = 'taskbar-app active';
+            taskbarApp.id = `taskbar-${windowId}`;
+            taskbarApp.textContent = appName.substring(0, 18);
+            taskbarApp.onclick = () => {
+                const window = state.windows.find(w => w.windowId === windowId);
+                if (window) {
+                    if (window.minimized) {
+                        window.minimized = false;
+                        window.element.style.display = 'flex';
+                        focusWindow(windowId);
+                    } else {
+                        window.element.style.display = 'none';
+                        window.minimized = true;
+                    }
+                }
+            };
+            taskbarApps.appendChild(taskbarApp);
+        }
+
+        function removeFromTaskbar(appId, windowId) {
+            const taskbarItem = document.getElementById(`taskbar-${windowId}`);
+            if (taskbarItem) {
+                taskbarItem.remove();
+            }
+        }
+
+        // ===== START MENU =====
+        function toggleStartMenu() {
+            const startMenu = document.getElementById('startMenu');
+            state.startMenuOpen = !state.startMenuOpen;
+            startMenu.style.display = state.startMenuOpen ? 'flex' : 'none';
+        }
+
+        // ===== CLOCK =====
+        function startClock() {
+            function updateClock() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                document.getElementById('taskbarClock').textContent = `${hours}:${minutes}:${seconds}`;
+            }
+
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        // ===== CMD APPLICATION =====
+        function createCMDContent() {
+            return `
+                <div class="cmd-terminal" id="cmdTerminal">
+                    <div class="cmd-line">Microsoft Windows [Version 10.0.26100]</div>
+                    <div class="cmd-line">(c) Microsoft Corporation. All rights reserved.</div>
+                    <div class="cmd-line">&nbsp;</div>
+                    <div class="cmd-line success">Type 'help' for available commands.</div>
+                    <div class="cmd-line">&nbsp;</div>
+                    <div class="cmd-input-line">
+                        <span class="cmd-prompt">C:\\Users\\Ozan530></span>
+                        <input type="text" class="cmd-input" id="cmdInput" autocomplete="off">
+                    </div>
+                </div>
+            `;
+        }
+
+        function initializeCMD(windowId) {
+            const window = document.getElementById(windowId);
+            const cmdInput = window.querySelector('.cmd-input');
+            const cmdTerminal = window.querySelector('.cmd-terminal');
+
+            const commands = {
+                'help': 'Commands: help, ver, whoami, date, time, cls, echo, dir, calc, paint, about, memory, disk, games',
+                'ver': 'KlamEX OS Version 8.5 Build 26100 (24/04/2026)',
+                'whoami': 'Ozan530@KLAMEX',
+                'date': new Date().toLocaleDateString('tr-TR'),
+                'time': new Date().toLocaleTimeString('tr-TR'),
+                'dir': 'Documents\\  Pictures\\  Downloads\\  Desktop\\ file.txt image.jpg music.mp3',
+                'about': 'KlamEX 8.5 - Advanced OS Simulator | 18+ Applications | Multiple Games',
+                'memory': 'Memory: 16GB Total | Used: 8456 MB | Free: 7897 MB',
+                'disk': 'Disk C: 2TB Total | 1TB Used | 1TB Free',
+                'games': 'Available: Snake, Tetris, Flappy Bird, Pong, Breakout, Maze, Memory',
+                'cls': 'CLEAR'
+            };
+
+            cmdInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const command = cmdInput.value.toLowerCase().trim();
+                    
+                    const inputLine = cmdInput.parentElement;
+                    inputLine.innerHTML = `
+                        <span class="cmd-prompt">C:\\Users\\Ozan530></span>
+                        <span style="color: #00ff00;">${cmdInput.value}</span>
+                    `;
+
+                    let output = '';
+                    let isError = false;
+
+                    if (command === 'cls') {
+                        cmdTerminal.innerHTML = '';
+                    } else if (command.startsWith('echo ')) {
+                        output = command.substring(5);
+                    } else if (commands[command]) {
+                        output = commands[command];
+                    } else if (command !== '') {
+                        output = `'${command}' is not recognized as an internal or external command.`;
+                        isError = true;
+                    }
+
+                    if (output !== 'CLEAR' && output) {
+                        const line = document.createElement('div');
+                        line.className = 'cmd-line' + (isError ? ' error' : '');
+                        line.textContent = output;
+                        cmdTerminal.appendChild(line);
+                    }
+
+                    const newInputLine = document.createElement('div');
+                    newInputLine.className = 'cmd-input-line';
+                    newInputLine.innerHTML = `
+                        <span class="cmd-prompt">C:\\Users\\Ozan530></span>
+                        <input type="text" class="cmd-input" autocomplete="off">
+                    `;
+                    cmdTerminal.appendChild(newInputLine);
+                    cmdTerminal.scrollTop = cmdTerminal.scrollHeight;
+
+                    const newInput = newInputLine.querySelector('.cmd-input');
+                    newInput.focus();
+                }
+            });
+
+            cmdInput.focus();
+        }
+
+        // ===== NOTEPAD APPLICATION =====
+        function createNotepadContent() {
+            const savedText = localStorage.getItem('notepad-content') || '';
+            return `
+                <div style="display: flex; flex-direction: column; height: 100%;">
+                    <div class="notepad-menu">
+                        <button onclick="saveNotepadFile()">💾 Save</button>
+                        <button onclick="clearNotepad()">🗑️ Clear</button>
+                        <button onclick="printNotepad()">🖨️ Print</button>
+                        <button onclick="exportNotepad()">📤 Export</button>
+                    </div>
+                    <textarea class="notepad-textarea" id="notepadTextarea">${savedText}</textarea>
+                </div>
+            `;
+        }
+
+        function saveNotepadFile() {
+            const textarea = document.querySelector('.notepad-textarea');
+            if (textarea) {
+                localStorage.setItem('notepad-content', textarea.value);
+                showNotification('File saved successfully!');
+            }
+        }
+
+        function clearNotepad() {
+            const textarea = document.querySelector('.notepad-textarea');
+            if (textarea && confirm('Clear all content?')) {
+                textarea.value = '';
+                localStorage.removeItem('notepad-content');
+            }
+        }
+
+        function printNotepad() {
+            const textarea = document.querySelector('.notepad-textarea');
+            if (textarea) {
+                const printWindow = window.open('', '', 'height=600,width=800');
+                printWindow.document.write('<pre>' + textarea.value + '</pre>');
+                printWindow.print();
+            }
+        }
+
+        function exportNotepad() {
+            const textarea = document.querySelector('.notepad-textarea');
+            if (textarea) {
+                const text = textarea.value;
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'document.txt';
+                a.click();
+                showNotification('File exported!');
+            }
+        }
+
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('notepad-textarea')) {
+                localStorage.setItem('notepad-content', e.target.value);
+            }
+        });
+
+        // ===== PAINT APPLICATION =====
+        function createPaintContent() {
+            return `
+                <div class="paint-container">
+                    <div class="paint-toolbar">
+                        <button class="paint-tool active" data-tool="pen">✏️ Pen</button>
+                        <button class="paint-tool" data-tool="eraser">🧹 Eraser</button>
+                        <button class="paint-tool" data-tool="line">📏 Line</button>
+                        <button class="paint-tool" data-tool="rect">▭ Rectangle</button>
+                        <button class="paint-tool" data-tool="circle">⭕ Circle</button>
+                        <button class="paint-tool" data-tool="fill">🪣 Fill</button>
+                        <button class="paint-tool" data-tool="text">📝 Text</button>
+                    </div>
+                    <div class="paint-controls">
+                        <label>Color:</label>
+                        <input type="color" class="paint-color-input" id="paintColor" value="#000000">
+                        <label>Size:</label>
+                        <input type="number" class="paint-size-input" id="paintSize" value="2" min="1" max="20">
+                        <button class="paint-tool" onclick="clearPaintCanvas()">🗑️ Clear</button>
+                        <button class="paint-tool" onclick="downloadPaintImage()">💾 Download</button>
+                        <button class="paint-tool" onclick="undoPaint()">↶ Undo</button>
+                    </div>
+                    <canvas class="paint-canvas" id="paintCanvas"></canvas>
+                </div>
+            `;
+        }
+
+        function initializePaint(windowId) {
+            const window = document.getElementById(windowId);
+            const canvas = window.querySelector('#paintCanvas');
+            const ctx = canvas.getContext('2d');
+            const colorInput = window.querySelector('#paintColor');
+            const sizeInput = window.querySelector('#paintSize');
+            const toolButtons = window.querySelectorAll('.paint-tool[data-tool]');
+
+            let isDrawing = false;
+            let currentTool = 'pen';
+            let startX, startY;
+            let paintHistory = [];
+
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            savePaintState();
+
+            toolButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    toolButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTool = btn.dataset.tool;
+                });
+            });
+
+            canvas.addEventListener('mousedown', (e) => {
+                isDrawing = true;
+                const rect = canvas.getBoundingClientRect();
+                startX = e.clientX - rect.left;
+                startY = e.clientY - rect.top;
+
+                if (currentTool === 'pen') {
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                }
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDrawing) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                ctx.strokeStyle = colorInput.value;
+                ctx.lineWidth = sizeInput.value;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.fillStyle = colorInput.value;
+
+                if (currentTool === 'pen') {
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                }
+            });
+
+            canvas.addEventListener('mouseup', (e) => {
+                if (!isDrawing) return;
+                isDrawing = false;
+
+                const rect = canvas.getBoundingClientRect();
+                const endX = e.clientX - rect.left;
+                const endY = e.clientY - rect.top;
+
+                ctx.strokeStyle = colorInput.value;
+                ctx.lineWidth = sizeInput.value;
+
+                if (currentTool === 'line') {
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                } else if (currentTool === 'rect') {
+                    ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+                } else if (currentTool === 'circle') {
+                    const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                    ctx.beginPath();
+                    ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+                    ctx.stroke();
+                }
+
+                savePaintState();
+            });
+
+            function savePaintState() {
+                paintHistory.push(canvas.toDataURL());
+            }
+        }
+
+        function clearPaintCanvas() {
+            const canvas = document.querySelector('.paint-canvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function downloadPaintImage() {
+            const canvas = document.querySelector('.paint-canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'painting.png';
+                link.click();
+                showNotification('Image downloaded!');
+            }
+        }
+
+        function undoPaint() {
+            showNotification('Undo feature');
+        }
+
+        // ===== CALCULATOR APPLICATION =====
+        function createCalculatorContent() {
+            return `
+                <div class="calculator-display" id="calcDisplay">0</div>
+                <div class="calculator-buttons">
+                    <button class="calc-btn clear" onclick="calcReset()">CE</button>
+                    <button class="calc-btn" onclick="calcAppend('√')">√</button>
+                    <button class="calc-btn operator" onclick="calcOp('/')">/</button>
+                    <button class="calc-btn operator" onclick="calcOp('*')">*</button>
+                    
+                    <button class="calc-btn" onclick="calcAppend('7')">7</button>
+                    <button class="calc-btn" onclick="calcAppend('8')">8</button>
+                    <button class="calc-btn" onclick="calcAppend('9')">9</button>
+                    <button class="calc-btn operator" onclick="calcOp('-')">-</button>
+                    
+                    <button class="calc-btn" onclick="calcAppend('4')">4</button>
+                    <button class="calc-btn" onclick="calcAppend('5')">5</button>
+                    <button class="calc-btn" onclick="calcAppend('6')">6</button>
+                    <button class="calc-btn operator" onclick="calcOp('+')">+</button>
+                    
+                    <button class="calc-btn" onclick="calcAppend('1')">1</button>
+                    <button class="calc-btn" onclick="calcAppend('2')">2</button>
+                    <button class="calc-btn" onclick="calcAppend('3')">3</button>
+                    <button class="calc-btn" onclick="calcAppend('.')">.</button>
+                    
+                    <button class="calc-btn" onclick="calcAppend('0')">0</button>
+                    <button class="calc-btn operator" onclick="calcPercent()">%</button>
+                    <button class="calc-btn equals" onclick="calcEquals()">=</button>
+                </div>
+            `;
+        }
+
+        function calcAppend(value) {
+            if (value === '√') {
+                state.calcValue = Math.sqrt(parseFloat(state.calcValue)).toString();
+            } else if (state.calcValue === '0' && value !== '.') {
+                state.calcValue = value;
+            } else if (value === '.' && state.calcValue.includes('.')) {
+                return;
+            } else {
+                state.calcValue += value;
+            }
+            document.getElementById('calcDisplay').textContent = state.calcValue;
+        }
+
+        function calcOp(op) {
+            state.calcPreviousValue = state.calcValue;
+            state.calcValue = '';
+            state.calcOperation = op;
+        }
+
+        function calcEquals() {
+            if (state.calcOperation && state.calcPreviousValue !== null) {
+                const prev = parseFloat(state.calcPreviousValue);
+                const current = parseFloat(state.calcValue);
+                let result;
+
+                switch(state.calcOperation) {
+                    case '+': result = prev + current; break;
+                    case '-': result = prev - current; break;
+                    case '*': result = prev * current; break;
+                    case '/': result = prev / current; break;
+                }
+
+                state.calcValue = result.toString();
+                document.getElementById('calcDisplay').textContent = state.calcValue;
+                state.calcOperation = null;
+                state.calcPreviousValue = null;
+            }
+        }
+
+        function calcReset() {
+            state.calcValue = '0';
+            state.calcOperation = null;
+            state.calcPreviousValue = null;
+            document.getElementById('calcDisplay').textContent = '0';
+        }
+
+        function calcPercent() {
+            state.calcValue = (parseFloat(state.calcValue) / 100).toString();
+            document.getElementById('calcDisplay').textContent = state.calcValue;
+        }
+
+        // ===== FILE EXPLORER APPLICATION =====
+        function createFileExplorerContent() {
+            return `
+                <div class="file-explorer">
+                    <div class="file-explorer-toolbar">
+                        <button class="explorer-btn">← Back</button>
+                        <button class="explorer-btn">→ Forward</button>
+                        <button class="explorer-btn">↑ Up</button>
+                        <button class="explorer-btn" onclick="refreshExplorer()">🔄 Refresh</button>
+                        <button class="explorer-btn">📋 Copy</button>
+                        <button class="explorer-btn">✂️ Cut</button>
+                        <button class="explorer-btn">📌 Paste</button>
+                    </div>
+                    <div class="file-path">C:\\Users\\Ozan530</div>
+                    <div class="file-explorer-content" id="fileExplorerContent"></div>
+                </div>
+            `;
+        }
+
+        function initializeFileExplorer(windowId) {
+            const window = document.getElementById(windowId);
+            const content = window.querySelector('#fileExplorerContent');
+
+            const files = [
+                { name: 'Documents', icon: '📁', type: 'folder' },
+                { name: 'Pictures', icon: '📁', type: 'folder' },
+                { name: 'Downloads', icon: '📁', type: 'folder' },
+                { name: 'Desktop', icon: '📁', type: 'folder' },
+                { name: 'Videos', icon: '📹', type: 'folder' },
+                { name: 'Music', icon: '🎵', type: 'folder' },
+                { name: 'Games', icon: '🎮', type: 'folder' },
+                { name: 'Projects', icon: '💼', type: 'folder' },
+                { name: 'file.txt', icon: '📄', type: 'file' },
+                { name: 'image.jpg', icon: '🖼️', type: 'file' },
+                { name: 'music.mp3', icon: '🎵', type: 'file' },
+                { name: 'video.mp4', icon: '🎬', type: 'file' },
+                { name: 'program.exe', icon: '⚙️', type: 'file' },
+                { name: 'archive.zip', icon: '📦', type: 'file' },
+                { name: 'document.pdf', icon: '📃', type: 'file' },
+                { name: 'code.html', icon: '💻', type: 'file' }
+            ];
+
+            content.innerHTML = '';
+            files.forEach(file => {
+                const fileEl = document.createElement('div');
+                fileEl.className = 'file-item';
+                fileEl.innerHTML = `
+                    <div class="file-item-icon">${file.icon}</div>
+                    <div class="file-item-name">${file.name}</div>
+                `;
+                fileEl.ondblclick = () => {
+                    if (file.type === 'folder') {
+                        showNotification(`Opening folder: ${file.name}`);
+                    } else {
+                        showNotification(`Opening file: ${file.name}`);
+                    }
+                };
+                content.appendChild(fileEl);
+            });
+        }
+
+        function refreshExplorer() {
+            showNotification('Explorer refreshed!');
+        }
+
+        // ===== SNAKE GAME =====
+        function createSnakeContent() {
+            return `
+                <div class="game-container">
+                    <div class="game-info">
+                        <div>Score: <span id="snakeScore">0</span></div>
+                        <div>Level: <span id="snakeLevel">1</span></div>
+                        <div>High Score: <span id="snakeHighScore">0</span></div>
+                    </div>
+                    <canvas id="snakeCanvas" class="game-canvas" width="400" height="400"></canvas>
+                    <div class="game-controls">Use Arrow Keys to move | Space to pause</div>
+                </div>
+            `;
+        }
+
+        function initializeSnake(windowId) {
+            const window = document.getElementById(windowId);
+            const canvas = window.querySelector('#snakeCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            const gridSize = 20;
+            let snake = [{ x: 10, y: 10 }];
+            let food = { x: 15, y: 15 };
+            let direction = { x: 1, y: 0 };
+            let nextDirection = { x: 1, y: 0 };
+            let score = 0;
+            let level = 1;
+            let gameRunning = true;
+            let gamePaused = false;
+            let speed = 100;
+
+            const keyHandler = (e) => {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    gamePaused = !gamePaused;
+                }
+                if (e.key === 'ArrowUp' && direction.y === 0) nextDirection = { x: 0, y: -1 };
+                if (e.key === 'ArrowDown' && direction.y === 0) nextDirection = { x: 0, y: 1 };
+                if (e.key === 'ArrowLeft' && direction.x === 0) nextDirection = { x: -1, y: 0 };
+                if (e.key === 'ArrowRight' && direction.x === 0) nextDirection = { x: 1, y: 0 };
+            };
+
+            document.addEventListener('keydown', keyHandler);
+
+            function draw() {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 0.5;
+                for (let i = 0; i <= canvas.width; i += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = '#00ff00';
+                snake.forEach((segment, index) => {
+                    ctx.fillRect(segment.x * gridSize + 1, segment.y * gridSize + 1, gridSize - 2, gridSize - 2);
+                    if (index === 0) {
+                        ctx.fillStyle = '#ffff00';
+                        ctx.fillRect(segment.x * gridSize + 3, segment.y * gridSize + 3, gridSize - 6, gridSize - 6);
+                        ctx.fillStyle = '#00ff00';
+                    }
+                });
+
+                ctx.fillStyle = '#ff0000';
+                ctx.beginPath();
+                ctx.arc(food.x * gridSize + gridSize / 2, food.y * gridSize + gridSize / 2, gridSize / 2 - 2, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.fillStyle = '#00ff00';
+                ctx.font = '14px Arial';
+                ctx.fillText(`Score: ${score} | Level: ${level}`, 10, 20);
+
+                if (gamePaused) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 30px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+                    ctx.textAlign = 'left';
+                }
+            }
+
+            function update() {
+                if (!gameRunning || gamePaused) return;
+
+                direction = nextDirection;
+
+                const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+                if (head.x < 0 || head.x >= canvas.width / gridSize || 
+                    head.y < 0 || head.y >= canvas.height / gridSize) {
+                    gameRunning = false;
+                    alert(`Game Over! Final Score: ${score}`);
+                    document.removeEventListener('keydown', keyHandler);
+                    return;
+                }
+
+                if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                    gameRunning = false;
+                    alert(`Game Over! Final Score: ${score}`);
+                    document.removeEventListener('keydown', keyHandler);
+                    return;
+                }
+
+                snake.unshift(head);
+
+                if (head.x === food.x && head.y === food.y) {
+                    score += 10 * level;
+                    if (score % 100 === 0) {
+                        level++;
+                        speed = Math.max(50, speed - 10);
+                    }
+                    window.querySelector('#snakeScore').textContent = score;
+                    window.querySelector('#snakeLevel').textContent = level;
+                    food = { 
+                        x: Math.floor(Math.random() * (canvas.width / gridSize)), 
+                        y: Math.floor(Math.random() * (canvas.height / gridSize)) 
+                    };
+                } else {
+                    snake.pop();
+                }
+            }
+
+            function gameLoop() {
+                update();
+                draw();
+                setTimeout(gameLoop, speed);
+            }
+
+            gameLoop();
+        }
+
+        // ===== TETRIS GAME =====
+        function createTetrisContent() {
+            return `
+                <div class="game-container">
+                    <div class="game-info">
+                        <div>Score: <span id="tetrisScore">0</span></div>
+                        <div>Lines: <span id="tetrisLines">0</span></div>
+                        <div>Level: <span id="tetrisLevel">1</span></div>
+                    </div>
+                    <canvas id="tetrisCanvas" class="game-canvas" width="200" height="400"></canvas>
+                    <div class="game-controls">Arrow Keys to move | Space to rotate</div>
+                </div>
+            `;
+        }
+
+        function initializeTetris(windowId) {
+            const window = document.getElementById(windowId);
+            const canvas = window.querySelector('#tetrisCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            const blockSize = 20;
+            const cols = 10;
+            const rows = 20;
+            let grid = Array(rows).fill(null).map(() => Array(cols).fill(0));
+            let score = 0;
+            let lines = 0;
+            let level = 1;
+
+            const pieces = [
+                [[1, 1, 1, 1]], // I
+                [[1, 1], [1, 1]], // O
+                [[0, 1, 1], [1, 1, 0]], // S
+                [[1, 1, 0], [0, 1, 1]], // Z
+                [[1, 0, 0], [1, 1, 1]], // L
+                [[0, 0, 1], [1, 1, 1]], // J
+                [[0, 1, 0], [1, 1, 1]]  // T
+            ];
+
+            function drawGrid() {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.strokeStyle = '#333';
+                for (let i = 0; i <= cols; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(i * blockSize, 0);
+                    ctx.lineTo(i * blockSize, canvas.height);
+                    ctx.stroke();
+                }
+                for (let i = 0; i <= rows; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i * blockSize);
+                    ctx.lineTo(canvas.width, i * blockSize);
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = '#00ff00';
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        if (grid[r][c]) {
+                            ctx.fillRect(c * blockSize, r * blockSize, blockSize - 1, blockSize - 1);
+                        }
+                    }
+                }
+            }
+
+            function gameLoop() {
+                drawGrid();
+                setTimeout(gameLoop, 500);
+            }
+
+            gameLoop();
+            window.querySelector('#tetrisScore').textContent = score;
+        }
+
+        // ===== FLAPPY BIRD GAME =====
+        function createFlappyContent() {
+            return `
+                <div class="game-container">
+                    <div class="game-info">
+                        <div>Score: <span id="flappyScore">0</span></div>
+                        <div>Best: <span id="flappyBest">0</span></div>
+                    </div>
+                    <canvas id="flappyCanvas" class="game-canvas" width="320" height="400"></canvas>
+                    <div class="game-controls">Click or Space to jump!</div>
+                </div>
+            `;
+        }
+
+        function initializeFlappy(windowId) {
+            const window = document.getElementById(windowId);
+            const canvas = window.querySelector('#flappyCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            let birdY = 150;
+            let velocity = 0;
+            let score = 0;
+
+            canvas.addEventListener('click', () => { velocity = -6; });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    velocity = -6;
+                }
+            });
+
+            function gameLoop() {
+                ctx.fillStyle = '#87CEEB';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                velocity += 0.2;
+                birdY += velocity;
+
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(50, birdY, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(150, 100, 60, 150);
+                ctx.fillRect(150, 300, 60, 100);
+
+                ctx.fillStyle = '#FFF';
+                ctx.font = '20px Arial';
+                ctx.fillText(`Score: ${score}`, 10, 30);
+
+                if (birdY > canvas.height || birdY < 0) {
+                    alert(`Game Over! Score: ${score}`);
+                    return;
+                }
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            gameLoop();
+        }
+
+        // ===== PONG GAME =====
+        function createPongContent() {
+            return `
+                <div class="game-container">
+                    <div class="game-info">
+                        <div>P1: <span id="pongP1">0</span></div>
+                        <div>P2: <span id="pongP2">0</span></div>
+                    </div>
+                    <canvas id="pongCanvas" class="game-canvas" width="400" height="300"></canvas>
+                    <div class="game-controls">W/S for P1 | Up/Down for P2</div>
+                </div>
+            `;
+        }
+
+        function initializePong(windowId) {
+            const window = document.getElementById(windowId);
+            const canvas = window.querySelector('#pongCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            let p1 = { x: 10, y: 125, width: 10, height: 50, score: 0 };
+            let p2 = { x: 380, y: 125, width: 10, height: 50, score: 0 };
+            let ball = { x: 200, y: 150, radius: 5, vx: 3, vy: 3 };
+
+            const keys = {};
+            document.addEventListener('keydown', (e) => { keys[e.key.toUpperCase()] = true; });
+            document.addEventListener('keyup', (e) => { keys[e.key.toUpperCase()] = false; });
+
+            function gameLoop() {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                if (keys['W'] && p1.y > 0) p1.y -= 5;
+                if (keys['S'] && p1.y < canvas.height - p1.height) p1.y += 5;
+                if (keys['ARROWUP'] && p2.y > 0) p2.y -= 5;
+                if (keys['ARROWDOWN'] && p2.y < canvas.height - p2.height) p2.y += 5;
+
+                ball.x += ball.vx;
+                ball.y += ball.vy;
+
+                if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                    ball.vy *= -1;
+                }
+
+                if (ball.x - ball.radius < p1.x + p1.width &&
+                    ball.y > p1.y && ball.y < p1.y + p1.height) {
+                    ball.vx *= -1;
+                }
+
+                if (ball.x + ball.radius > p2.x &&
+                    ball.y > p2.y && ball.y < p2.y + p2.height) {
+                    ball.vx *= -1;
+                }
+
+                if (ball.x < 0) {
+                    p2.score++;
+                    ball = { x: 200, y: 150, radius: 5, vx: 3, vy: 3 };
+                }
+                if (ball.x > canvas.width) {
+                    p1.score++;
+                    ball = { x: 200, y: 150, radius: 5, vx: -3, vy: 3 };
+                }
+
+                ctx.fillStyle = '#FFF';
+                ctx.fillRect(p1.x, p1.y, p1.width, p1.height);
+                ctx.fillRect(p2.x, p2.y, p2.width, p2.height);
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                window.querySelector('#pongP1').textContent = p1.score;
+                window.querySelector('#pongP2').textContent = p2.score;
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            gameLoop();
+        }
+
+        // ===== BREAKOUT GAME =====
+        function createBreakoutContent() {
+            return `
+                <div class="game-container">
+                    <div class="game-info">
+                        <div>Score: <span id="breakoutScore">0</span></div>
+                        <div>Lives: <span id="breakoutLives">3</span></div>
+                    </div>
+                    <canvas id="breakoutCanvas" class="game-canvas" width="400" height="300"></canvas>
+                    <div class="game-controls">Arrow Keys to move | Break all blocks!</div>
+                </div>
+            `;
+        }
+
+        function initializeBreakout(windowId) {
+            const window = document.getElementById(windowId);
+            const canvas = window.querySelector('#breakoutCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            let paddle = { x: 175, y: 280, width: 50, height: 10 };
+            let ball = { x: 200, y: 250, radius: 5, vx: 2, vy: -2 };
+            let score = 0;
+            let lives = 3;
+            let blocks = [];
+
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 8; col++) {
+                    blocks.push({
+                        x: col * 50,
+                        y: row * 20 + 10,
+                        width: 48,
+                        height: 18,
+                        active: true
+                    });
+                }
+            }
+
+            const keys = {};
+            document.addEventListener('keydown', (e) => { keys[e.key.toUpperCase()] = true; });
+            document.addEventListener('keyup', (e) => { keys[e.key.toUpperCase()] = false; });
+
+            function gameLoop() {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                if (keys['ARROWLEFT'] && paddle.x > 0) paddle.x -= 5;
+                if (keys['ARROWRIGHT'] && paddle.x < canvas.width - paddle.width) paddle.x += 5;
+
+                ball.x += ball.vx;
+                ball.y += ball.vy;
+
+                if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+                    ball.vx *= -1;
+                }
+                if (ball.y - ball.radius < 0) {
+                    ball.vy *= -1;
+                }
+
+                if (ball.y + ball.radius > paddle.y &&
+                    ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+                    ball.vy *= -1;
+                }
+
+                blocks.forEach(block => {
+                    if (block.active &&
+                        ball.x + ball.radius > block.x &&
+                        ball.x - ball.radius < block.x + block.width &&
+                        ball.y + ball.radius > block.y &&
+                        ball.y - ball.radius < block.y + block.height) {
+                        block.active = false;
+                        ball.vy *= -1;
+                        score += 10;
+                    }
+                });
+
+                ctx.fillStyle = '#00FF00';
+                ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#FF0000';
+                blocks.forEach(block => {
+                    if (block.active) {
+                        ctx.fillRect(block.x, block.y, block.width, block.height);
+                    }
+                });
+
+                window.querySelector('#breakoutScore').textContent = score;
+
+                if (ball.y > canvas.height) {
+                    lives--;
+                    if (lives <= 0) {
+                        alert(`Game Over! Score: ${score}`);
+                        return;
+                    }
+                    ball = { x: 200, y: 250, radius: 5, vx: 2, vy: -2 };
+                    window.querySelector('#breakoutLives').textContent = lives;
+                }
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            gameLoop();
+        }
+
+        // ===== MAZE GAME =====
+        function createMazeContent() {
+            return `
+                <div class="game-container">
+                    <div class="game-info">
+                        <div>Level: <span id="mazeLevel">1</span></div>
+                        <div>Time: <span id="mazeTime">0</span>s</div>
+                    </div>
+                    <canvas id="mazeCanvas" class="game-canvas" width="300" height="300"></canvas>
+                    <div class="game-controls">Arrow Keys to navigate | Reach the exit!</div>
+                </div>
+            `;
+        }
+
+        function initializeMaze(windowId) {
+            const window = document.getElementById(windowId);
+            const canvas = window.querySelector('#mazeCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            let playerX = 10;
+            let playerY = 10;
+            let time = 0;
+
+            const keys = {};
+            document.addEventListener('keydown', (e) => { keys[e.key.toUpperCase()] = true; });
+            document.addEventListener('keyup', (e) => { keys[e.key.toUpperCase()] = false; });
+
+            setInterval(() => { time++; window.querySelector('#mazeTime').textContent = time; }, 1000);
+
+            function gameLoop() {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                if (keys['ARROWUP']) playerY -= 3;
+                if (keys['ARROWDOWN']) playerY += 3;
+                if (keys['ARROWLEFT']) playerX -= 3;
+                if (keys['ARROWRIGHT']) playerX += 3;
+
+                playerX = Math.max(0, Math.min(playerX, canvas.width - 10));
+                playerY = Math.max(0, Math.min(playerY, canvas.height - 10));
+
+                ctx.strokeStyle = '#00FF00';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(10, 10, 280, 280);
+
+                ctx.fillStyle = '#00FF00';
+                ctx.fillRect(playerX, playerY, 10, 10);
+
+                ctx.fillStyle = '#FF0000';
+                ctx.fillRect(280, 280, 10, 10);
+
+                ctx.fillStyle = '#FFF';
+                ctx.font = '14px Arial';
+                ctx.fillText('Goal', 280, 305);
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            gameLoop();
+        }
+
+        // ===== MEMORY GAME =====
+        function createMemoryContent() {
+            return `
+                <div class="game-container">
+                    <div class="game-info">
+                        <div>Matches: <span id="memoryMatches">0</span></div>
+                        <div>Attempts: <span id="memoryAttempts">0</span></div>
+                    </div>
+                    <div id="memoryGrid" style="display: grid; grid-template-columns: repeat(4, 50px); gap: 5px; margin: 20px;"></div>
+                    <div class="game-controls">Click cards to find pairs!</div>
+                </div>
+            `;
+        }
+
+        function initializeMemory(windowId) {
+            const window = document.getElementById(windowId);
+            const grid = window.querySelector('#memoryGrid');
+            const icons = ['🍎', '🍌', '🍊', '🍇', '🍓', '🥝', '🍑', '🍒'];
+            const cards = [...icons, ...icons].sort(() => Math.random() - 0.5);
+
+            let matched = 0;
+            let attempts = 0;
+            let flipped = [];
+
+            cards.forEach((icon, index) => {
+                const card = document.createElement('div');
+                card.style.cssText = 'width: 50px; height: 50px; background: #667eea; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 24px; user-select: none;';
+                card.textContent = '?';
+                card.onclick = () => {
+                    if (flipped.includes(index)) return;
+                    flipped.push(index);
+                    card.textContent = icon;
+                    attempts++;
+
+                    if (flipped.length === 2) {
+                        const [idx1, idx2] = flipped;
+                        if (cards[idx1] === cards[idx2]) {
+                            matched++;
+                            window.querySelector('#memoryMatches').textContent = matched;
+                            flipped = [];
+                        } else {
+                            setTimeout(() => {
+                                grid.children[idx1].textContent = '?';
+                                grid.children[idx2].textContent = '?';
+                                flipped = [];
+                            }, 1000);
+                        }
+                    }
+                    window.querySelector('#memoryAttempts').textContent = attempts;
+                };
+                grid.appendChild(card);
+            });
+        }
+
+        // ===== BROWSER =====
+        function createBrowserContent() {
+            return `
+                <div style="display: flex; flex-direction: column; height: 100%;">
+                    <div class="paint-controls" style="gap: 5px;">
+                        <button class="explorer-btn">←</button>
+                        <button class="explorer-btn">→</button>
+                        <input type="text" style="flex: 1; padding: 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px;" value="http://klamex.local" readonly>
+                        <button class="explorer-btn">🔄</button>
+                    </div>
+                    <div style="flex: 1; padding: 20px; overflow: auto; background: white;">
+                        <h1>🌐 Welcome to KlamEX Browser</h1>
+                        <p>This is a web browser built into KlamEX 8.5</p>
+                        <p><a href="#" style="color: #667eea; text-decoration: underline; cursor: pointer;">About</a> | <a href="#" style="color: #667eea; text-decoration: underline; cursor: pointer;">Gallery</a></p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== IMAGE VIEWER =====
+        function createImageViewerContent() {
+            return `
+                <div style="display: flex; flex-direction: column; height: 100%; align-items: center; justify-content: center; gap: 20px; background: #f0f0f0;">
+                    <div style="width: 250px; height: 250px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 80px; color: white; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);">🖼️</div>
+                    <div style="text-align: center; color: #333;">
+                        <p><strong>image.jpg</strong></p>
+                        <p style="font-size: 12px; color: #666;">800 x 600 pixels | 245 KB</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="paint-tool">🔍+</button>
+                        <button class="paint-tool">🔍-</button>
+                        <button class="paint-tool">🔄 Rotate</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== TASK MANAGER =====
+        function createTaskManagerContent() {
+            return `
+                <div style="display: flex; flex-direction: column; height: 100%;">
+                    <div style="flex: 1; overflow-y: auto; border-bottom: 1px solid #ccc;">
+                        <div style="padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between;">
+                            <div><strong>⌘ Command Prompt</strong><div style="font-size: 11px; color: #667eea;">Running - 12 MB</div></div>
+                            <button class="paint-tool">End Task</button>
+                        </div>
+                        <div style="padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between;">
+                            <div><strong>📝 Notepad</strong><div style="font-size: 11px; color: #667eea;">Running - 8 MB</div></div>
+                            <button class="paint-tool">End Task</button>
+                        </div>
+                        <div style="padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between;">
+                            <div><strong>🎨 Paint</strong><div style="font-size: 11px; color: #667eea;">Running - 24 MB</div></div>
+                            <button class="paint-tool">End Task</button>
+                        </div>
+                    </div>
+                    <div class="paint-controls">
+                        <button class="paint-tool">🔄 Refresh</button>
+                        <button class="paint-tool">➕ New Task</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== SYSTEM INFO =====
+        function createSystemInfoContent() {
+            return `
+                <div style="padding: 20px; color: #333; overflow-y: auto;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">System Information</h3>
+                    
+                    <div style="margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+                        <strong>OS Name:</strong>
+                        <span>KlamEX 8.5</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+                        <strong>OS Version:</strong>
+                        <span>8.5.26100</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+                        <strong>CPU:</strong>
+                        <span>Intel Core i9-14900K</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+                        <strong>RAM:</strong>
+                        <span>16 GB</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+                        <strong>Storage:</strong>
+                        <span>2TB NVMe SSD</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+                        <strong>GPU:</strong>
+                        <span>NVIDIA RTX 4090</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+                        <strong>Display:</strong>
+                        <span>3840 x 2160 (4K)</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+                        <strong>Network:</strong>
+                        <span>Connected - 1Gbps</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== CODE EDITOR =====
+        function createCodeEditorContent() {
+            return `
+                <div style="display: flex; height: 100%;">
+                    <div style="background: #f0f0f0; border-right: 1px solid #ccc; padding: 10px 5px; color: #999; font-family: 'Courier New', monospace; font-size: 12px; text-align: right; user-select: none; min-width: 40px;">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10</div>
+                    <textarea style="flex: 1; padding: 10px; font-family: 'Courier New', monospace; font-size: 12px; border: none; outline: none; resize: none;">&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;KlamEX&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Welcome!&lt;/h1&gt;
+    &lt;p&gt;Edit code here...&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</textarea>
+                </div>
+            `;
+        }
+
+        // ===== MEDIA PLAYER =====
+        function createMediaPlayerContent() {
+            return `
+                <div style="display: flex; flex-direction: column; height: 100%; align-items: center; justify-content: center; gap: 20px; color: #333;">
+                    <div style="font-size: 80px;">🎵</div>
+                    <div style="text-align: center;">
+                        <p><strong>Now Playing: Summer Song</strong></p>
+                        <p style="color: #999; font-size: 12px;">Artist: KlamEX Music | 5:12</p>
+                    </div>
+                    <div style="width: 300px; background: #ddd; height: 6px; border-radius: 3px; margin: 10px 0;"></div>
+                    <div style="font-size: 12px; color: #666;">02:35 / 05:12</div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="paint-tool">⏮️</button>
+                        <button class="paint-tool">▶️</button>
+                        <button class="paint-tool">⏸️</button>
+                        <button class="paint-tool">⏭️</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== CONTEXT MENU =====
+        document.addEventListener('contextmenu', (e) => {
+            const desktop = document.getElementById('desktop');
+            if (desktop.style.display === 'block') {
+                e.preventDefault();
+                const contextMenu = document.getElementById('contextMenu');
+                contextMenu.style.left = e.clientX + 'px';
+                contextMenu.style.top = e.clientY + 'px';
+                contextMenu.innerHTML = `
+                    <div class="context-menu-item" onclick="openApplication('cmd', 'cmd')">⌘ Command Prompt</div>
+                    <div class="context-menu-item" onclick="openApplication('notepad', 'notepad')">📝 New Notepad</div>
+                    <div class="context-menu-item" onclick="openApplication('paint', 'paint')">🎨 New Paint</div>
+                    <div class="context-menu-item" onclick="refreshDesktop()">🔄 Refresh</div>
+                `;
+                contextMenu.style.display = 'block';
+            }
+        });
+
+        document.addEventListener('click', () => {
+            document.getElementById('contextMenu').style.display = 'none';
+            if (state.startMenuOpen) {
+                const startMenu = document.getElementById('startMenu');
+                if (!startMenu.contains(event.target) && !document.querySelector('.taskbar-start').contains(event.target)) {
+                    toggleStartMenu();
+                }
+            }
+        });
+
+        function refreshDesktop() {
+            location.reload();
+        }
+
+        // ===== INITIALIZATION =====
+        window.addEventListener('load', () => {
+            startBoot();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Escape') {
+                if (state.activeWindow) {
+                    closeWindow(state.activeWindow);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
